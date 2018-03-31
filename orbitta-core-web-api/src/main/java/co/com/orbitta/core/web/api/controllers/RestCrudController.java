@@ -1,6 +1,7 @@
 package co.com.orbitta.core.web.api.controllers;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -22,7 +23,7 @@ import co.com.orbitta.core.dto.IdentifiedDomainObject;
 import co.com.orbitta.core.services.crud.api.CrudService;
 import lombok.val;
 
-abstract public class RestCrudController<M extends IdentifiedDomainObject<ID>, I extends IdentifiedDomainObject<ID>, ID extends Serializable> {
+abstract public class RestCrudController<M extends IdentifiedDomainObject<ID>, ID extends Serializable> {
 
 	// -----------------------------------------------'-------------------------------------------------------------------------------------
 	// -- PATHS
@@ -49,26 +50,27 @@ abstract public class RestCrudController<M extends IdentifiedDomainObject<ID>, I
 	// ------------------------------------------------------------------------------------------------------------------------------------
 	// -- Servicio
 	// ------------------------------------------------------------------------------------------------------------------------------------
-	abstract protected CrudService<M, I, ID> getService();
+	abstract protected CrudService<M, ID> getService();
 
 	// -----------------------------------------------'-------------------------------------------------------------------------------------
 	// -- HTTP GET METHODS
 	// ------------------------------------------------------------------------------------------------------------------------------------
 	@GetMapping(PATH_LIST)
-	public ResponseEntity<List<I>> list() {
-		val result = getService().getList();
+	public ResponseEntity<List<M>> list() {
+		val ids = new ArrayList<ID>();
+		val result = getService().findAllById(ids);
 		return ResponseEntity.ok(result);
 	}
 
 	@GetMapping(PATH_LIST_SEARCH_IN)
-	public ResponseEntity<List<I>> list(@PathVariable List<ID> ids) {
-		val result = getService().getList(ids);
+	public ResponseEntity<List<M>> list(@PathVariable List<ID> ids) {
+		val result = getService().findAllById(ids);
 		return ResponseEntity.ok(result);
 	}
 
 	@GetMapping(path = PATH_ENTITY)
 	public ResponseEntity<M> get(@PathVariable ID id) {
-		Optional<M> result = getService().getModel(id);
+		Optional<M> result = getService().findById(id);
 
 		if (!result.isPresent()) {
 			throw new NotFoundException();

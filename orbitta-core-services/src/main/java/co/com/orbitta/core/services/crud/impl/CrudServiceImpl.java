@@ -19,8 +19,8 @@ import co.com.orbitta.core.dto.VersionableObject;
 import co.com.orbitta.core.services.crud.api.CrudService;
 import lombok.val;
 
-abstract public class CrudServiceImpl<E extends IdentifiedDomainObject<ID>, M extends IdentifiedDomainObject<ID>, I extends IdentifiedDomainObject<ID>, ID extends Serializable>
-		implements CrudService<M, I, ID> {
+abstract public class CrudServiceImpl<E extends IdentifiedDomainObject<ID>, M extends IdentifiedDomainObject<ID>, ID extends Serializable>
+		implements CrudService<M, ID> {
 
 	abstract protected JpaRepository<E, ID> getRepository();
 
@@ -28,38 +28,38 @@ abstract public class CrudServiceImpl<E extends IdentifiedDomainObject<ID>, M ex
 	// READ
 	// -----------------------------------------------------------------------------------------------------------------------
 	@Override
-	public List<I> getList() {
-		val entities = getRepository().findAll();
-		val result = getListItemModel(entities);
+	public M findOneById(ID id) {
+		E entity = findOneEntityById(id);
+
+		val result = asModel(entity);
 		return result;
 	}
 
 	@Override
-	public List<I> getList(Collection<ID> ids) {
-		val entities = getRepository().findAllById(ids);
-		val result = getListItemModel(entities);
-		return result;
-	}
+	public Optional<M> findById(ID id) {
+		Optional<E> optional = findEntityById(id);
 
-	protected List<I> getListItemModel(Collection<E> entities) {
-		// @formatter:off
-		val result = entities
-				.stream()
-				.map(e -> getItemModelFromEntity(e))
-				.collect(toList());
-		// @formatter:on
+		Optional<M> result;
+		if (!optional.isPresent()) {
+			result = Optional.empty();
+		} else {
+			result = Optional.of(asModel(optional.get()));
+		}
 		return result;
 	}
 
 	@Override
-	public Optional<M> getModel(ID id) {
-		Optional<E> entity = getStoredEntity(id);
-		if (entity.isPresent()) {
-			return Optional.empty();
+	public List<M> findAllById(Collection<ID> ids) {
+		List<E> entities;
+
+		if (ids.isEmpty()) {
+			entities = getRepository().findAll();
+		} else {
+			entities = getRepository().findAllById(ids);
 		}
 
-		val result = getModelFromEntity(entity.get());
-		return Optional.of(result);
+		val result = asModels(entities);
+		return result;
 	}
 
 	// -----------------------------------------------------------------------------------------------------------------------
@@ -67,13 +67,23 @@ abstract public class CrudServiceImpl<E extends IdentifiedDomainObject<ID>, M ex
 	// -----------------------------------------------------------------------------------------------------------------------
 	@Override
 	public M create(M model) {
-		E entity = getNewEntity();
-		entity = mapModelToEntity(model, entity);
+		E entity = newEntity();
 
+		entity = asEntity(model, entity);
 		entity = beforeCreate(entity);
 		entity = saveEntity(entity);
 
-		val result = getModelFromEntity(entity);
+		val result = asModel(entity);
+		return result;
+	}
+
+	@Override
+	public List<M> create(List<M> models) {
+		val result = new ArrayList<M>();
+
+		for (M m : models) {
+			result.add(create(m));
+		}
 		return result;
 	}
 
@@ -86,16 +96,30 @@ abstract public class CrudServiceImpl<E extends IdentifiedDomainObject<ID>, M ex
 	// -----------------------------------------------------------------------------------------------------------------------
 	@Override
 	public M update(M model) {
-		Optional<E> optional = getStoredEntity(model.getId());
-		if (!optional.isPresent()) {
-			throw new EntityNotFoundException("id = " + String.valueOf(model.getId()));
+		E entity = findOneEntityById(model.getId());
+
+		entity = asEntity(model, entity);
+		entity = beforeUpdate(entity);
+
+		if (entity instanceof VersionableObject && model instanceof VersionableObject) {
+			val e = ((VersionableObject) entity);
+			val m = ((VersionableObject) model);
+			e.setVersion(m.getVersion());
 		}
 
-		E entity = mapModelToEntity(model, optional.get());
-		entity = beforeUpdate(entity);
 		entity = saveEntity(entity);
 
-		M result = getModelFromEntity(entity);
+		M result = asModel(entity);
+		return result;
+	}
+
+	@Override
+	public List<M> update(List<M> models) {
+		val result = new ArrayList<M>();
+
+		for (M m : models) {
+			result.add(update(m));
+		}
 		return result;
 	}
 
@@ -108,12 +132,8 @@ abstract public class CrudServiceImpl<E extends IdentifiedDomainObject<ID>, M ex
 	// -----------------------------------------------------------------------------------------------------------------------
 	@Override
 	public void delete(ID id) {
-		Optional<E> optional = getStoredEntity(id);
-		if (!optional.isPresent()) {
-			throw new EntityNotFoundException("id = " + String.valueOf(id));
-		}
+		E entity = findOneEntityById(id);
 
-		E entity = optional.get();
 		if (entity instanceof VersionableObject) {
 			throw new UnsupportedOperationException(
 					"La entidad implenta la interfaz VersionableObject y debe ser eliminada por medio del metodo delete(ID id, int version)");
@@ -124,57 +144,28 @@ abstract public class CrudServiceImpl<E extends IdentifiedDomainObject<ID>, M ex
 	}
 
 	@Override
-	public void delete(ID id, int version) {
-		Optional<E> optional = getStoredEntity(id);
-		if (!optional.isPresent()) {
-			throw new EntityNotFoundException("id = " + String.valueOf(id));
+	public void delete(List<ID> ids) {
+		for (val e : ids) {
+			delete(e);
 		}
+	}
 
-		E entity = optional.get();
+	@Override
+	public void delete(ID id, int version) {
+		E entity = findOneEntityById(id);
+
 		if (!(entity instanceof VersionableObject)) {
 			throw new UnsupportedOperationException(
 					"La entidad NO implenta la interfaz VersionableObject y debe ser eliminada por medio del metodo delete(ID id)");
 		}
 
-		val versionable = (VersionableObject) entity;
-		if (versionable.getVersion() != version) {
+		val e = (VersionableObject) entity;
+		if (e.getVersion() != version) {
 			throw new OptimisticLockException();
 		}
 
 		entity = beforeDelete(entity);
 		deleteEntity(entity);
-	}
-
-	protected E beforeDelete(E entity) {
-		return entity;
-	}
-
-	// -----------------------------------------------------------------------------------------------------------------------
-	//
-	// -----------------------------------------------------------------------------------------------------------------------
-	@Override
-	public List<M> create(List<M> models) {
-		val result = new ArrayList<M>();
-		for (M m : models) {
-			result.add(create(m));
-		}
-		return result;
-	}
-
-	@Override
-	public List<M> update(List<M> models) {
-		val result = new ArrayList<M>();
-		for (M m : models) {
-			result.add(update(m));
-		}
-		return result;
-	}
-
-	@Override
-	public void delete(List<ID> ids) {
-		for (val e : ids) {
-			delete(e);
-		}
 	}
 
 	@Override
@@ -184,21 +175,24 @@ abstract public class CrudServiceImpl<E extends IdentifiedDomainObject<ID>, M ex
 		}
 	}
 
-	// -----------------------------------------------------------------------------------------------------------------------
-	//
-	// -----------------------------------------------------------------------------------------------------------------------
-	abstract protected M getModelFromEntity(E entity);
-
-	abstract protected I getItemModelFromEntity(E entity);
-
-	abstract protected E mapModelToEntity(M model, E entity);
+	protected E beforeDelete(E entity) {
+		return entity;
+	}
 
 	// -----------------------------------------------------------------------------------------------------------------------
-	//
+	// Entities
 	// -----------------------------------------------------------------------------------------------------------------------
-	abstract protected E getNewEntity();
+	abstract protected E newEntity();
 
-	protected Optional<E> getStoredEntity(ID id) {
+	protected E findOneEntityById(ID id) {
+		val result = getRepository().findById(id);
+		if (!result.isPresent()) {
+			throw new EntityNotFoundException("id = " + String.valueOf(id));
+		}
+		return result.get();
+	}
+
+	protected Optional<E> findEntityById(ID id) {
 		val result = getRepository().findById(id);
 		return result;
 	}
@@ -210,5 +204,27 @@ abstract public class CrudServiceImpl<E extends IdentifiedDomainObject<ID>, M ex
 
 	protected void deleteEntity(E entity) {
 		getRepository().delete(entity);
+	}
+
+	// -----------------------------------------------------------------------------------------------------------------------
+	//
+	// -----------------------------------------------------------------------------------------------------------------------
+	abstract protected E asEntity(M model, E entity);
+
+	abstract protected M asModel(E entity);
+
+	protected Optional<M> asModel(Optional<E> optional) {
+		Optional<M> result;
+		if (optional.isPresent()) {
+			result = Optional.of(asModel(optional.get()));
+		} else {
+			result = Optional.empty();
+		}
+		return result;
+	}
+
+	protected List<M> asModels(Collection<E> entities) {
+		val result = entities.stream().map(e -> asModel(e)).collect(toList());
+		return result;
 	}
 }

@@ -9,7 +9,6 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.MappedSuperclass;
 
-import org.hibernate.annotations.DynamicUpdate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import co.com.orbitta.core.dto.IdentifiedDomainObject;
@@ -26,7 +25,6 @@ import lombok.ToString;
 @ToString
 @NoArgsConstructor
 @AllArgsConstructor
-@DynamicUpdate(true)
 @EntityListeners(AuditingEntityListener.class)
 public abstract class BaseEntity<ID extends Serializable> implements IdentifiedDomainObject<ID> {
 

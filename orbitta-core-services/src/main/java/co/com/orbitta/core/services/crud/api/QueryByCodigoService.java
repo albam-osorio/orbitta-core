@@ -1,10 +1,15 @@
 package co.com.orbitta.core.services.crud.api;
 
-import java.io.Serializable;
 import java.util.Optional;
 
-import co.com.orbitta.core.dto.IdentifiedDomainObject;
+import org.springframework.transaction.annotation.Transactional;
 
-public interface QueryByCodigoService<M extends IdentifiedDomainObject<ID>, ID extends Serializable> {
+import co.com.orbitta.core.domain.ObjectWithCode;
+
+
+public interface QueryByCodigoService<M extends ObjectWithCode<ID>, ID> {
+
+	@Transactional(readOnly = true)
 	Optional<M> findByCodigo(String codigo);
+
 }

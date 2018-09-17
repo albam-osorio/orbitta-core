@@ -1,23 +1,13 @@
 package co.com.orbitta.core.services.crud.api;
 
-import java.io.Serializable;
-import java.util.Collection;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 
 import org.springframework.transaction.annotation.Transactional;
 
-import co.com.orbitta.core.dto.IdentifiedDomainObject;
+import co.com.orbitta.core.domain.IdentifiedDomainObject;
 
-@Transactional(readOnly = true)
-public interface CrudService<M extends IdentifiedDomainObject<ID>, ID extends Serializable> {
-
-	M findOneById(ID id);
-
-	Optional<M> findById(ID id);
-
-	List<M> findAllById(Collection<ID> ids);
+public interface CrudService<M extends IdentifiedDomainObject<ID>, ID> extends QueryService<M, ID> {
 
 	@Transactional
 	M create(M model);

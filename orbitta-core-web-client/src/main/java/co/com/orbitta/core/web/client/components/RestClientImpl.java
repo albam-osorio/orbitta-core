@@ -1,7 +1,5 @@
 package co.com.orbitta.core.web.client.components;
 
-import java.io.Serializable;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -27,7 +25,7 @@ public class RestClientImpl implements RestClient {
 	// -- HTTP GET METHODS
 	// ------------------------------------------------------------------------------------------------------------------------------------
 	@Override
-	public <T, ID extends Serializable> ResponseEntity<T> get(String resourcePath, Class<T> responseType, ID id) {
+	public <T, ID> ResponseEntity<T> get(String resourcePath, Class<T> responseType, ID id) {
 		val query = "{id}";
 		val result = getOneQuery(resourcePath, query, responseType, id);
 		return result;
@@ -70,8 +68,21 @@ public class RestClientImpl implements RestClient {
 	}
 
 	@Override
-	public <ID extends Serializable> void delete(String resourcePath, ID id, int version) {
-		getRestTemplate().delete(resourcePath);
+	public <T> ResponseEntity<T> patch(String resourcePath, Object model, Class<T> responseType,
+			Object... uriVariables) {
+		val request = createRequestEntity(mapModelToRequestBody(model));
+		val result = getRestTemplate().exchange(resourcePath, HttpMethod.PATCH, request, responseType, uriVariables);
+		return result;
+	}
+	
+	@Override
+	public <ID> void delete(String resourcePath, ID id) {
+		getRestTemplate().delete(resourcePath, id);
+	}
+
+	@Override
+	public <ID> void delete(String resourcePath, ID id, int version) {
+		getRestTemplate().delete(resourcePath, id, version);
 	}
 
 	protected <T> Object mapModelToRequestBody(T model) {

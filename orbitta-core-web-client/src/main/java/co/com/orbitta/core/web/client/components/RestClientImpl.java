@@ -17,7 +17,7 @@ public class RestClientImpl implements RestClient {
 	@Autowired
 	private RestTemplate restTemplate;
 
-	protected RestTemplate getRestTemplate() {
+	public RestTemplate getRestTemplate() {
 		return restTemplate;
 	};
 

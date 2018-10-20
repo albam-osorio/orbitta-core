@@ -1,7 +1,6 @@
 package co.com.orbitta.core.web.client.service.api;
 
-public interface LocalCrudService<M, ID>
-		extends LocalQueryService<M, ID> {
+public interface LocalCrudService<M, ID> extends LocalQueryService<M, ID> {
 
 	M create(M model);
 

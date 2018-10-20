@@ -1,4 +1,3 @@
-
 package co.com.orbitta.core.services.crud.impl;
 
 import java.util.ArrayList;
@@ -81,7 +80,7 @@ abstract public class CrudServiceImpl<E extends IdentifiedDomainObject<ID>, M ex
 		for (M m : models) {
 			result.add(update(m));
 		}
-		
+
 		return result;
 	}
 

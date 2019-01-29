@@ -17,7 +17,7 @@ public interface CrudService<M extends IdentifiedDomainObject<ID>, ID> extends Q
 
 	@Transactional
 	M update(M model);
-
+	
 	@Transactional
 	List<M> update(List<M> models);
 

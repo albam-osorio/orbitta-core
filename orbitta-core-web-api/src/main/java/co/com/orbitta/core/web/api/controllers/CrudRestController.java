@@ -36,6 +36,7 @@ abstract public class CrudRestController<M extends IdentifiedDomainObject<ID>, I
 	// ------------------------------------------------------------------------------------------------------------------------------------
 	@PostMapping
 	public ResponseEntity<?> create(@Valid @RequestBody M model, BindingResult bindingResult) {
+		try {
 		if (model.getId() != null) {
 			return ResponseEntity.status(HttpStatus.CONFLICT).build();
 		}
@@ -47,10 +48,14 @@ abstract public class CrudRestController<M extends IdentifiedDomainObject<ID>, I
 		M result = getService().create(model);
 
 		return ResponseEntity.created(showURI(result).toUri()).body(result);
+		} catch (RuntimeException e) {
+			return ResponseEntity.badRequest().body(e);
+		}
 	}
 
 	@PutMapping
 	public ResponseEntity<?> update(@Valid @RequestBody M model, BindingResult bindingResult) {
+		try {
 		if (model.getId() == null) {
 			return ResponseEntity.status(HttpStatus.CONFLICT).build();
 		}
@@ -62,21 +67,30 @@ abstract public class CrudRestController<M extends IdentifiedDomainObject<ID>, I
 		M result = getService().update(model);
 
 		return ResponseEntity.created(showURI(result).toUri()).body(result);
+		} catch (RuntimeException e) {
+			return ResponseEntity.badRequest().body(e);
+		}
 	}
 
 	@DeleteMapping(PATH_ENTITY)
 	public ResponseEntity<?> delete(@PathVariable ID id) {
-
+		try {
 		getService().delete(id);
 
 		return ResponseEntity.ok().build();
+		} catch (RuntimeException e) {
+			return ResponseEntity.badRequest().body(e);
+		}
 	}
 
 	@DeleteMapping(PATH_DELETE)
 	public ResponseEntity<?> delete(@PathVariable ID id, @PathVariable Integer version) {
-
+		try {
 		getService().delete(id, version);
 
 		return ResponseEntity.ok().build();
+		} catch (RuntimeException e) {
+			return ResponseEntity.badRequest().body(e);
+		}
 	}
 }

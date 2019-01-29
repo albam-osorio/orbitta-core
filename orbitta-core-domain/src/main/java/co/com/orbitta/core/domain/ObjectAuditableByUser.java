@@ -4,7 +4,7 @@ public interface ObjectAuditableByUser {
 	
 	String getCreadoPor();
 
-	void setCreadoPor(String creadorPor);
+	void setCreadoPor(String creadoPor);
 
 	String getModificadoPor();
 

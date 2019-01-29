@@ -8,8 +8,6 @@ import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 
-import org.springframework.beans.factory.annotation.Autowired;
-
 import co.com.orbitta.core.web.client.components.RestClient;
 import co.com.orbitta.core.web.client.configuration.RestProperties;
 import co.com.orbitta.core.web.client.service.api.LocalQueryService;
@@ -28,12 +26,7 @@ public abstract class LocalQueryServiceImpl<M,ID>
 
 	abstract protected Class<M[]> getArrayReponseType();
 
-	@Autowired
-	private RestClient restClient;
-
-	protected RestClient getRestClient() {
-		return restClient;
-	}
+	abstract protected RestClient getRestClient();
 
 	// -----------------------------------------------'-------------------------------------------------------------------------------------
 	// --

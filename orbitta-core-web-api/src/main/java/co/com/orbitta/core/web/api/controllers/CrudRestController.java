@@ -11,8 +11,8 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 
-import co.com.orbitta.core.domain.IdentifiedDomainObject;
-import co.com.orbitta.core.services.crud.api.CrudService;
+import com.tbf.cibercolegios.api.core.domain.IdentifiedDomainObject;
+import com.tbf.cibercolegios.api.core.services.crud.api.CrudService;
 
 abstract public class CrudRestController<M extends IdentifiedDomainObject<ID>, ID> extends QueryRestController<M, ID>{
 

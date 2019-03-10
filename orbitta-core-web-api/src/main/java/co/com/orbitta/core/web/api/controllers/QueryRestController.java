@@ -9,8 +9,9 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder;
 import org.springframework.web.util.UriComponents;
 
-import co.com.orbitta.core.domain.IdentifiedDomainObject;
-import co.com.orbitta.core.services.crud.api.QueryService;
+import com.tbf.cibercolegios.api.core.domain.IdentifiedDomainObject;
+import com.tbf.cibercolegios.api.core.services.crud.api.QueryService;
+
 import lombok.val;
 
 abstract public class QueryRestController<M extends IdentifiedDomainObject<ID>, ID> {
